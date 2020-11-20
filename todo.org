@@ -1,0 +1,11 @@
+#+TITLE: Todo
+
+* Select
+* Project
+* Join
+* Rename
+* Union
+* Difference
+
+Every operator returns a new table
+resulting from the operation
