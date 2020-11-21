@@ -6,12 +6,13 @@ class Operator:
        the operators are put here. The class itself
        should not be called"""
 
+    # The columns names should be strings inside a tuple or list
     authorized_types = [str, list, tuple]
 
     def __init__(self):
         """"""
 
-    def check_cols(cols):
+    def check_cols(self, cols):
 
         cols_type = type(cols)
 
@@ -27,8 +28,13 @@ class Operator:
         if cols_type == list or cols_type == tuple:
             for column_name in cols:
                 if type(column_name) != str:
-
-        return cols
+                    raise TypeError("""The members from your collection
+                                       should be strings, but {} is
+                                       {}""".format(column_name,
+                                                    type(column_name)))
+    def is_atomic(self, table):
+        ttype = type(table)
+        return ttype == list or ttype == tuple
 
 
 class Select(Operator):
@@ -40,12 +46,15 @@ class Select(Operator):
         self.cols = self.check_cols(columns_name)
 
 
-class Project:
+class Project(Operator):
 
-    def __init__(self):
+    def __init__(self, column_names, table):
         """"""
-        super().__init__()
+        self.is_atomic = self.is_atomic(table)
 
+
+    def execute_op(self):
+       
 class Join:
 
     def __init__(self):
@@ -69,3 +78,8 @@ class Difference:
     def __init__(self):
         """"""
         super().__init__()
+
+
+class Rel:
+
+    def __init__(self, )

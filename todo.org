@@ -40,3 +40,11 @@ pour une requête invalide
 
 Une fois validée, une expression SPJRUD pourra
 être traduite vers une expression SQL.
+
+
+* API usage
+
+#+BEGIN_SRC python
+select_names = Query(Select(col_name, table))
+# Returns a Query object
+#+END_SRC
