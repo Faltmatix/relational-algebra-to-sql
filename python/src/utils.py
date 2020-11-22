@@ -17,7 +17,7 @@ class Database:
         self.cursor = self.connection.cursor()
 
 
-    def get_datatypes(self, table_name):
+    def get_datatypes(self, table_name, columns=None):
         """
         Returns the name and datatype of each column
         as a python dictionnary
@@ -30,7 +30,13 @@ class Database:
         for row in table_info:
             dic[row[1]] = row[2] # row[1] = col_name, row[2] = data_type
 
-        return dic
+        if columns == None:
+            return dic
+        else:
+            new_dic = {}
+            for col_name in columns:
+                new_dic[col_name] = dic[col_name]
+        return new_dic
 
     def get_columns(self, table_name, columns=None):
         """

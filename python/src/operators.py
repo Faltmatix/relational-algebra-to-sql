@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+import utils
 
 class Operator:
     """This class is the template of the operators.
@@ -54,6 +54,7 @@ class Project(Operator):
 
 
     def execute_op(self):
+        """"""
        
 class Join:
 
@@ -82,4 +83,23 @@ class Difference:
 
 class Rel:
 
-    def __init__(self, )
+    """
+    Rel is a relation from some database. You can either
+    instatiate it with the help of utils.Database or
+    you can simply create a relation where
+    dtypes is a dictionnary of the columns name and
+    data is a list of tuples with the length of the dictionnary
+
+    It is recommanded to rely more on the Database
+    class when calling Rel because it takes care
+    of the boilerplate code
+
+    >>> db = utils.Database("path_to_database")
+    >>> dtypes  = db.get_datatypes("table_name")
+    >>> data = db.get_columns("table_name")
+    >>> r = Rel(dtypes, data)
+    """
+
+    def __init__(self, dtypes, data):
+        self.dtypes = dtypes
+        self.data = data
