@@ -32,14 +32,13 @@ class Operator:
                                        should be strings, but {} is
                                        {}""".format(column_name,
                                                     type(column_name)))
-    def is_atomic(self, table):
-        ttype = type(table)
-        return ttype == list or ttype == tuple
+    def is_atomic(self, rel):
+        return isinstance(rel, Rel)
 
 
 class Select(Operator):
 
-    def __init__(self, columns_name, table):
+    def __init__(self, columns_name, rel):
         """Cols should be put in a tuple (*cols,)
            to prevent SQL injection from the string operations"""
 
@@ -48,12 +47,27 @@ class Select(Operator):
 
 class Project(Operator):
 
-    def __init__(self, column_names, table):
+    def __init__(self, column_names, rel):
         """"""
-        self.is_atomic = self.is_atomic(table)
+        self.rel = rel
+        self.col_names = column_names
+
+        if self.is_atomic(rel):
+            self.result = self.execute_atomic()
+        else:
+            self.result = self.execute_non_atomic()
+
+    def execute_atomic(self):
+        """
+        Returns a new relation which is the projection
+        of the column names in the relation given as
+        a parameter to the class
+        """
+        return self.rel.keep(self.col_names)
 
 
-    def execute_op(self):
+
+    def execute_non_atomic(self):
         """"""
        
 class Join:
@@ -90,16 +104,64 @@ class Rel:
     dtypes is a dictionnary of the columns name and
     data is a list of tuples with the length of the dictionnary
 
+    >>> r = Rel(
+               {"student_name":"text", "student_age":"int"},
+               [["Adrien", 20], ["Joe", 21]
+               )
+
     It is recommanded to rely more on the Database
     class when calling Rel because it takes care
     of the boilerplate code
 
     >>> db = utils.Database("path_to_database")
-    >>> dtypes  = db.get_datatypes("table_name")
-    >>> data = db.get_columns("table_name")
+    >>> dtypes  = db.get_datatypes("rel_name")
+    >>> data = db.get_columns("rel_name")
     >>> r = Rel(dtypes, data)
+
+    Implementation details :
+
+    Since python 3.6, dictionaries have become insertion
+    ordered, it means we can separate the data types from
+    the data contained while still knowing which row belongs
+    to which datatype/name
     """
 
     def __init__(self, dtypes, data):
         self.dtypes = dtypes
         self.data = data
+
+    def keep(self, column_names):
+        """
+        Some comment
+        """
+
+        new_data = []
+        new_keys = {}
+        old_keys = list(self.dtypes.keys())
+        key_indexes = []
+
+        for name in column_names:
+            for i in range(len(old_keys)):
+                if name == old_keys[i]:
+                    new_keys[name] = self.dtypes[name]
+                    key_indexes.append(i)
+
+        for i in range(len(self.data)):
+            row = []
+            for j in key_indexes:
+                row.append(self.data[i][j])
+            new_data.append(row)
+
+        return Rel(new_keys, new_data)
+
+    def __str__(self):
+        col_names = "{}\n".format(self.dtypes)
+        data = ""
+        for i in range(len(self.data)):
+            data += "{}\n".format(self.data[i])
+
+        return col_names + data
+
+
+    def __eq__(self, r):
+        return self.dtypes == r.dtypes and self.data == r.data
