@@ -53,8 +53,12 @@ class Project(Operator):
         self.col_names = column_names
 
         if self.is_atomic(rel):
+            #print("Atomic")
             self.result = self.execute_atomic()
+            self.sql = "select {} from {}".format(", ".join(column_names),
+                                                  rel.name)
         else:
+            #print("Not atomic")
             self.result = self.execute_non_atomic()
 
     def execute_atomic(self):
@@ -106,7 +110,7 @@ class Rel:
 
     >>> r = Rel(
                {"student_name":"text", "student_age":"int"},
-               [["Adrien", 20], ["Joe", 21]
+               [["Adrien", 20], ["Joe", 21]]
                )
 
     It is recommanded to rely more on the Database
@@ -126,9 +130,10 @@ class Rel:
     to which datatype/name
     """
 
-    def __init__(self, dtypes, data):
+    def __init__(self, dtypes, data, name=None):
         self.dtypes = dtypes
         self.data = data
+        self.name = name
 
     def keep(self, column_names):
         """
@@ -155,12 +160,13 @@ class Rel:
         return Rel(new_keys, new_data)
 
     def __str__(self):
+        relation_name = "{}\n".format(self.name) if self.name != None else ""
         col_names = "{}\n".format(self.dtypes)
         data = ""
         for i in range(len(self.data)):
             data += "{}\n".format(self.data[i])
 
-        return col_names + data
+        return relation_name + col_names + data
 
 
     def __eq__(self, r):

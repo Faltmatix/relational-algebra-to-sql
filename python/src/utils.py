@@ -1,4 +1,5 @@
 import sqlite3
+import operators
 
 class Database:
     """
@@ -76,3 +77,8 @@ class Database:
             self.cursor.execute("SELECT {} FROM {}".format(names, table_name))
 
         return self.cursor.fetchall()
+
+    def get_relation(self, table_name, columns=None):
+        dtypes = self.get_datatypes(table_name, columns=columns)
+        data = self.get_columns(table_name, columns=columns)
+        return operators.Rel(dtypes, data, name=table_name)

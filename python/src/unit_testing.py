@@ -24,6 +24,8 @@ class TestProject(unittest.TestCase):
     eres2 = Rel({"name":"text", "id":"integer"},
                 [["Adrien", 1], ["Loic", 2]])
 
+    print(proj1.sql)
+
     def test_equal1(self):
         self.assertTrue(TestProject.eres1 == TestProject.proj1.result)
 
