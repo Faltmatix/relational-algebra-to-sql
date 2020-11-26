@@ -38,12 +38,24 @@ class Operator:
 
 class Select(Operator):
 
-    def __init__(self, columns_name, rel):
+    def __init__(self, columns_name, target_values, rel):
         """Cols should be put in a tuple (*cols,)
            to prevent SQL injection from the string operations"""
 
-        self.cols = self.check_cols(columns_name)
+        self.columns_name = columns_name
+        self.target_values = target_values
+        self.rel = rel
 
+    def execute(self):
+        """"""
+
+    def execute_atomic(self):
+        """"""
+        equality = zip(self.columns_name, target_values)
+
+
+    def execute_non_atomic(self):
+        """"""
 
 class Project(Operator):
 
@@ -51,14 +63,14 @@ class Project(Operator):
         """"""
         self.rel = rel
         self.col_names = column_names
+        self.execute()
 
-        if self.is_atomic(rel):
-            #print("Atomic")
+    def execute(self):
+        if self.is_atomic(self.rel):
             self.result = self.execute_atomic()
-            self.sql = "select {} from {}".format(", ".join(column_names),
-                                                  rel.name)
+            self.sql = "SELECT DISTINCT {} FROM {}".format(", ".join(self.col_names),
+                                                  self.rel.name)
         else:
-            #print("Not atomic")
             self.result = self.execute_non_atomic()
 
     def execute_atomic(self):
@@ -68,7 +80,6 @@ class Project(Operator):
         a parameter to the class
         """
         return self.rel.keep(self.col_names)
-
 
 
     def execute_non_atomic(self):

@@ -11,8 +11,7 @@ db = utils.Database("../resources/testing.db")
 class TestProject(unittest.TestCase):
     """"""
 
-    r = Rel(db.get_datatypes("students"),
-            db.get_columns("students"))
+    r = db.get_relation("students")
 
     # Object to evaluate
     proj1 = Project(["id", "name"], r)
@@ -20,16 +19,16 @@ class TestProject(unittest.TestCase):
 
     # Expected results
     eres1 = Rel({"id":"integer", "name":"text"},
-                [[1, "Adrien"], [2, "Loic"]])
+                [[1, "Adrien"], [2, "Loic"]],
+                name="students")
     eres2 = Rel({"name":"text", "id":"integer"},
-                [["Adrien", 1], ["Loic", 2]])
+                [["Adrien", 1], ["Loic", 2]],
+                name="students")
 
-    print(proj1.sql)
-
-    def test_equal1(self):
+    def test_atomic1(self):
         self.assertTrue(TestProject.eres1 == TestProject.proj1.result)
 
-    def test_equal2(self):
+    def test_atomic2(self):
         self.assertTrue(TestProject.eres2 == TestProject.proj2.result)
 
 #class TestJoin(unittest.TestCase):
