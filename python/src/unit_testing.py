@@ -1,25 +1,40 @@
 import unittest
-from query import *
 from operators import *
+import utils
 
-class TestQuery(unittest.TestCase):
+db = utils.Database("../resources/testing.db")
 
-    def test_init_not_string(self):
-        self.assertRaises(TypeError, Query(100))
-
-    def test_init_not_database(self):
-        self.assertRaises(BaseException, Query("Abcd"))
-
-    def test_init_file_not_found(self):
-        self.assertRaises(FileNotFoundError, Query("database.db"))
+#class TestQuery(unittest.TestCase):
 
 #class TestSelect(unittest.TestCase):
-#class TestProject(unittest.TestCase):
+#
+class TestProject(unittest.TestCase):
+    """"""
+
+    r = Rel(db.get_datatypes("students"),
+            db.get_columns("students"))
+
+    # Object to evaluate
+    proj1 = Project(["id", "name"], r)
+    proj2 = Project(["name", "id"], r)
+
+    # Expected results
+    eres1 = Rel({"id":"integer", "name":"text"},
+                [[1, "Adrien"], [2, "Loic"]])
+    eres2 = Rel({"name":"text", "id":"integer"},
+                [["Adrien", 1], ["Loic", 2]])
+
+    def test_equal1(self):
+        self.assertTrue(TestProject.eres1 == TestProject.proj1.result)
+
+    def test_equal2(self):
+        self.assertTrue(TestProject.eres2 == TestProject.proj2.result)
+
 #class TestJoin(unittest.TestCase):
 #class TestRename(unittest.TestCase):
 #class TestUnion(unittest.TestCase):
 #class TestDifference(unittest.TestCase):
 
 if __name__ == "__main__":
-    assert(BaseException == Query("Abcd"))
-#    unittest.main()
+
+    unittest.main()
