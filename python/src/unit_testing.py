@@ -31,7 +31,28 @@ class TestProject(unittest.TestCase):
     def test_atomic2(self):
         self.assertTrue(TestProject.eres2 == TestProject.proj2.result)
 
-#class TestJoin(unittest.TestCase):
+class TestJoin(unittest.TestCase):
+
+    def test_atomic(self):
+
+        r = db.get_relation("join_r")
+        s = db.get_relation("join_s")
+        join = Join(r,s)
+
+        # Expected result
+        dtypes = {'A': 'integer', 'B': 'integer', 'C': 'integer', 'D': 'integer'}
+        data = [[1, 3, 5, 2],
+                [1, 4, 5, 2],
+                [1, 4, 5, 1],
+                [2, 4, 5, 2],
+                [2, 4, 5, 1]]
+
+        rel = Rel(dtypes, data)
+
+        self.assertTrue(join.result == rel)
+
+
+
 #class TestRename(unittest.TestCase):
 #class TestUnion(unittest.TestCase):
 #class TestDifference(unittest.TestCase):

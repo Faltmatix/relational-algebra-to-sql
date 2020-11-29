@@ -12,6 +12,9 @@ class Operator:
     def __init__(self):
         """"""
 
+    def execute_non_atomic(self):
+        """"""
+
     def check_cols(self, cols):
 
         cols_type = type(cols)
@@ -85,11 +88,22 @@ class Project(Operator):
     def execute_non_atomic(self):
         """"""
        
-class Join:
+class Join(Operator):
 
-    def __init__(self):
+    def __init__(self, relation1, relation2):
         """"""
-        super().__init__()
+        self.rel1 = relation1
+        self.rel2 = relation2
+        if self.is_atomic(relation1) and self.is_atomic(relation2):
+            self.result = self.execute_atomic()
+            self.sql = "SELECT * FROM {} NATURAL JOIN {}".format(relation1.name,
+                                                                 relation2.name)
+        else:
+            self.result = self.execute_non_atomic()
+
+    def execute_atomic(self):
+        return self.rel1.join(self.rel2)
+
 
 class Rename:
 
@@ -169,6 +183,72 @@ class Rel:
             new_data.append(row)
 
         return Rel(new_keys, new_data)
+
+    def join(self, other):
+        """
+        Get common names A = A
+        """
+        this_keys = self.dtypes.keys()
+        this_values = self.dtypes.values()
+        other_keys = other.dtypes.keys()
+        other_values = other.dtypes.values()
+        indexes_list = []
+        common_columns = []
+        this_counter = -1
+        other_counter = -1
+
+        # Looking for the common columns name. If found, we remember the indices
+        # of those columns for later in the algorithm
+
+        for t_k in this_keys:
+            this_counter += 1
+            for o_k in other_keys:
+                other_counter += 1
+                if t_k == o_k:
+                    common_columns.append(t_k)
+                    indexes_list.append([this_counter, other_counter])
+            other_counter = -1
+
+        if len(common_columns) == 0:
+            raise Exception("Can't join, there are no columns with the same name")
+
+        for key in common_columns:
+            if self.dtypes[key] != other.dtypes[key]:
+                raise TypeError("You have two different type for the column : {}".format(key))
+
+        # Helper function to determine if we need to join a row between two tables
+        def is_joinable(l1, l2, indexes_list):
+            for i, j in indexes_list:
+                if l1[i] != l2[j]:
+                    return False
+            return True
+
+        # Building the join for the column names
+        columns = self.dtypes
+
+        # Add remaining columns from the other relation
+        for name, dtype in zip(other_keys, other_values):
+            if name not in this_keys:
+                columns[name] = dtype
+
+        # We join the rows where the condition is true
+        data = []
+        for self_row in self.data:
+            for other_row in other.data:
+                if is_joinable(self_row, other_row, indexes_list):
+                    data.append(list(self_row) + list(other_row))
+
+        # The last step is to remove the duplicate columns of data from
+        # the other relation
+        offset = len(this_keys)
+        indices_to_remove = [i + offset - 1 for _, i in indexes_list]
+        for row in data:
+            for i in sorted(indices_to_remove, reverse=True):
+                del row[i]
+
+        return Rel(columns, data)
+
+
 
     def __str__(self):
         relation_name = "{}\n".format(self.name) if self.name != None else ""
