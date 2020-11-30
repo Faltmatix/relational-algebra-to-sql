@@ -135,12 +135,22 @@ class Union(Operator):
         return self.rel1.union(self.rel2)
 
 
-class Difference:
+class Difference(Operator):
 
-    def __init__(self):
+    def __init__(self, relation1, relation2):
         """"""
-        super().__init__()
+        self.rel1 = relation1
+        self.rel2 = relation2
+        if self.is_atomic(relation1) and self.is_atomic(relation2):
+            self.result = self.execute_atomic()
+            self.sql = """SELECT * FROM {}
+                          EXCEPT select * FROM {}""".format(relation1.name,
+                                                            relation2.name)
+        else:
+            self.execute_non_atomic()
 
+    def execute_atomic(self):
+        return self.rel1.minus(self.rel2)
 
 class Rel:
 
@@ -301,6 +311,20 @@ class Rel:
                 if row not in union_data:
                     union_data.append(row)
             return Rel(self.dtypes, union_data, name=self.name)
+
+    def minus(self, other):
+        """
+        Returns the difference between this relation
+        and another relation
+        """
+
+        if self.dtypes != other.dtypes:
+            raise Exception("""The columns are incompatible, the names
+            are either different or the types are different :\n
+            {} {}""".format(self.dtypes, other.dtypes))
+        else:
+            new_data = [row for row in self.data if row not in other.data]
+            return Rel(self.dtypes, new_data, name=self.name)
 
 
     def __str__(self):

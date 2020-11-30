@@ -57,7 +57,6 @@ class TestJoin(unittest.TestCase):
         self.assertTrue(join.result == rel)
 
 
-#class ComposedRequests(unittest.TestCase):
 
 
 class TestRename(unittest.TestCase):
@@ -99,7 +98,24 @@ class TestUnion(unittest.TestCase):
         self.assertTrue(union.result == rel)
 
 
-#class TestDifference(unittest.TestCase):
+class TestDifference(unittest.TestCase):
+
+    def test_atomic(self):
+
+        r = db.get_relation("union_r")
+        s = db.get_relation("union_s")
+        difference = Difference(r, s)
+
+        # Expected result
+        dtypes = r.dtypes
+        data = [(1, 3, 5)]
+        rel = Rel(dtypes, data)
+
+        print(rel, difference.result)
+
+        self.assertTrue(difference.result == rel)
+
+#class ComposedRequests(unittest.TestCase):
 
 if __name__ == "__main__":
 
