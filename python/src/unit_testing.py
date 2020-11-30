@@ -45,6 +45,7 @@ class TestJoin(unittest.TestCase):
                   'C': 'integer',
                   'D': 'integer'}
 
+        # TODO : unifier data en tuple
         data = [[1, 3, 5, 2],
                 [1, 4, 5, 2],
                 [1, 4, 5, 1],
@@ -79,7 +80,25 @@ class TestRename(unittest.TestCase):
 
         self.assertTrue(rename.result == rel)
 
-#class TestUnion(unittest.TestCase):
+class TestUnion(unittest.TestCase):
+
+    def test_atomic(self):
+
+        r = db.get_relation("union_r")
+        s = db.get_relation("union_s")
+        union = Union(r, s)
+
+        # Expected result
+        dtypes = r.dtypes
+        data = [(1, 3, 5),
+                (1, 4, 5),
+                (2, 3, 6)]
+
+        rel = Rel(dtypes, data)
+
+        self.assertTrue(union.result == rel)
+
+
 #class TestDifference(unittest.TestCase):
 
 if __name__ == "__main__":
