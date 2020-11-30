@@ -40,24 +40,28 @@ class Operator:
 
 class Select(Operator):
 
-    def __init__(self, columns_name, target_values, rel):
+    def __init__(self, relation, column_name, target):
         """Cols should be put in a tuple (*cols,)
            to prevent SQL injection from the string operations"""
 
-        self.columns_name = columns_name
-        self.target_values = target_values
-        self.rel = rel
+        self.rel = relation
+        self.column_name = column_name
+        self.target = target
+        if self.is_atomic(relation):
+            self.result = self.execute_atomic()
+            self.sql = """SELECT DISTINCT * FROM {}
+                          WHERE {} = {}""".format(relation.name,
+                                                  column_name,
+                                                  target)
+        else:
+            self.result = self.execute_non_atomic()
 
     def execute(self):
         """"""
 
     def execute_atomic(self):
         """"""
-        equality = zip(self.columns_name, target_values)
-
-
-    def execute_non_atomic(self):
-        """"""
+        return self.rel.select(self.column_name, self.target)
 
 class Project(Operator):
 
@@ -326,6 +330,45 @@ class Rel:
             new_data = [row for row in self.data if row not in other.data]
             return Rel(self.dtypes, new_data, name=self.name)
 
+
+    def select(self, col_name, value):
+        """
+        Select has two possible flows. The first one is the equality
+        of two columns and the second one is the equality of a column
+        and a value.
+        """
+
+        if col_name not in self.dtypes:
+            raise Exception("""{} is not a column name of :
+                          {}""".format(col_name, self.__str__()))
+
+        data = []
+
+        # If the value is a column name
+        if value in self.dtypes:
+            count = 0
+            col1 = 0
+            col2 = 0
+            for key in self.dtypes:
+                if key == col_name:
+                    col1 = count
+                elif key == value:
+                    col2 = count
+                count += 1
+                data = [row for row in self.data if row[col1] == row[col2]]
+
+        # If the value is data
+        else:
+            count = 0
+            column_index = 0
+            for key in self.dtypes:
+                if key == col_name:
+                    column_index = count
+                    break
+                count += 1
+            data = [row for row in self.data if row[column_index] == value]
+
+        return Rel(self.dtypes, data, name=self.name)
 
     def __str__(self):
         relation_name = "{}\n".format(self.name) if self.name != None else ""

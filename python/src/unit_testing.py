@@ -6,8 +6,38 @@ db = utils.Database("../resources/testing.db")
 
 #class TestQuery(unittest.TestCase):
 
-#class TestSelect(unittest.TestCase):
-#
+class TestSelect(unittest.TestCase):
+
+    def test_atomic1(self):
+
+        r = db.get_relation("select_r")
+        select = Select(r, "A", 1)
+
+        # Expected results
+        dtypes = r.dtypes
+        data = [(1, 3, 2),
+                (1, 4, 1)]
+        rel = Rel(dtypes, data)
+
+        self.assertTrue(select.result == rel)
+
+    def test_atomic2(self):
+
+        r = db.get_relation("select_r")
+        select = Select(r, "A", "C")
+
+        # Expected results
+        dtypes = r.dtypes
+        data = [(1, 4, 1),
+                (2, 4, 2)]
+
+        rel = Rel(dtypes, data)
+
+        print(rel, select.result)
+
+        self.assertTrue(select.result == rel)
+
+
 class TestProject(unittest.TestCase):
     """"""
 
@@ -110,8 +140,6 @@ class TestDifference(unittest.TestCase):
         dtypes = r.dtypes
         data = [(1, 3, 5)]
         rel = Rel(dtypes, data)
-
-        print(rel, difference.result)
 
         self.assertTrue(difference.result == rel)
 
