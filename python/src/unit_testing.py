@@ -40,7 +40,11 @@ class TestJoin(unittest.TestCase):
         join = Join(r,s)
 
         # Expected result
-        dtypes = {'A': 'integer', 'B': 'integer', 'C': 'integer', 'D': 'integer'}
+        dtypes = {'A': 'integer',
+                  'B': 'integer',
+                  'C': 'integer',
+                  'D': 'integer'}
+
         data = [[1, 3, 5, 2],
                 [1, 4, 5, 2],
                 [1, 4, 5, 1],
@@ -52,8 +56,29 @@ class TestJoin(unittest.TestCase):
         self.assertTrue(join.result == rel)
 
 
+#class ComposedRequests(unittest.TestCase):
 
-#class TestRename(unittest.TestCase):
+
+class TestRename(unittest.TestCase):
+
+    def test_atomic(self):
+
+        r = db.get_relation("students")
+        rename = Rename(r, "age", "Age")
+
+        # Expected result
+        dtypes = {'id': 'integer',
+                  'name': 'text',
+                  'Age': 'int',
+                  'studies': 'text'}
+
+        data = [(1, 'Adrien', 20, 'Computer Science'),
+                (2, 'Loic', 20, 'Engineering')]
+
+        rel = Rel(dtypes, data)
+
+        self.assertTrue(rename.result == rel)
+
 #class TestUnion(unittest.TestCase):
 #class TestDifference(unittest.TestCase):
 

@@ -38,7 +38,6 @@ class Operator:
     def is_atomic(self, rel):
         return isinstance(rel, Rel)
 
-
 class Select(Operator):
 
     def __init__(self, columns_name, target_values, rel):
@@ -105,11 +104,17 @@ class Join(Operator):
         return self.rel1.join(self.rel2)
 
 
-class Rename:
+class Rename(Operator):
 
-    def __init__(self):
+    def __init__(self, relation, old_name, new_name):
         """"""
-        super().__init__()
+        self.rel = relation
+
+        if self.is_atomic(relation):
+            self.result = relation.rename(old_name, new_name)
+            self.sql = """ALTER TABLE {}
+                          RENAME COLUMN {} to {}
+                       """.format(relation.name, old_name, new_name)
 
 class Union:
 
@@ -248,6 +253,24 @@ class Rel:
 
         return Rel(columns, data)
 
+
+    def rename(self, old_name, new_name):
+        """
+        Returns a new relation with the old_name replaced
+        by the new_name in the dtypes attribute
+        """
+
+        if old_name not in self.dtypes:
+            raise Exception("{} is not in {}".format(old_name, self.name))
+        else:
+            new_dtypes = {}
+            for name in self.dtypes:
+                if name != old_name:
+                    new_dtypes[name] = self.dtypes[name]
+                else:
+                    new_dtypes[new_name] = self.dtypes[name]
+
+        return Rel(new_dtypes, self.data, name=self.name)
 
 
     def __str__(self):
