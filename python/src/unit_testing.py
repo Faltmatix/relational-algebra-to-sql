@@ -167,6 +167,63 @@ class ComposedRequests(unittest.TestCase):
 
         self.assertTrue(request.result == rel)
 
+    def test_rename_project(self):
+
+        r = db.get_relation("students")
+        request = Rename(Project(r, "name"), "name", "Name")
+
+        # Expected result
+        dtypes = {"Name":"text"}
+        data = [['Adrien'], ['Loic']]
+        rel = Rel(dtypes, data)
+
+        self.assertTrue(request.result == rel)
+
+    def test_project_rename(self):
+
+        r = db.get_relation("students")
+        request = Project(Rename(r, "studies", "Studies"), ["name", "Studies"])
+
+        # Expected result
+        dtypes = {'name': 'text', 'Studies': 'text'}
+        data = [['Adrien', 'Computer Science'],
+                ['Loic', 'Engineering']]
+        rel = Rel(dtypes, data)
+
+        self.assertTrue(request.result == rel)
+
+    def test_union_select(self):
+
+        # Expected result
+        r = db.get_relation("students")
+
+        request = Union(Select(r, "name", "Adrien"), Select(r, "name", "Loic"))
+
+        self.assertTrue(request.result == r)
+
+    def test_union_select2(self):
+
+        # Expected result
+        r = db.get_relation("students")
+
+        request = Union(Select(r, "name", "Adrien"), r)
+
+        self.assertTrue(request.result == r)
+
+    def test_difference_select(self):
+
+        r = db.get_relation("students")
+        request = Difference(r, Select(r, "name", "Adrien"))
+
+        #Expected result
+        dtypes = {'id': 'integer', 'name': 'text', 'age': 'int', 'studies': 'text'}
+        # TODO Examine why rel doesn't encapsulate data in a list by itself
+        data = [(2, 'Loic', 20, 'Engineering')]
+        rel = Rel(dtypes, data)
+
+        self.assertTrue(request.result == rel)
+
+
 
 if __name__ == "__main__":
 

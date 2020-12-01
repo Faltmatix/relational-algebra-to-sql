@@ -96,7 +96,6 @@ class Project(Operator):
 
     def execute_non_atomic(self):
         """"""
-        print("Non atomic Project")
         return self.rel.execute()
        
 class Join(Operator):
@@ -127,6 +126,9 @@ class Rename(Operator):
             self.sql = """ALTER TABLE {}
                           RENAME COLUMN {} to {}
                        """.format(relation.name, old_name, new_name)
+        else:
+            self.rel = self.rel.result
+            self.result = self.rel.rename(old_name, new_name)
 
 class Union(Operator):
 
@@ -141,7 +143,16 @@ class Union(Operator):
                           UNION SELECT * FROM {}""".format(relation1.name,
                                                            relation2.name)
         else:
-            self.execute_non_atomic()
+            if not self.is_atomic(relation1) and not self.is_atomic(relation2):
+                self.rel1 = relation1.result
+                self.rel2 = relation2.result
+                self.result = self.execute_atomic()
+            elif not self.is_atomic(relation1):
+                self.rel1 = relation1.result
+                self.result = self.execute_atomic()
+            elif not self.is_atomic(relation2):
+                self.rel2 = relation2.result
+                self.result = self.execute_atomic()
 
     def execute_atomic(self):
         return self.rel1.union(self.rel2)
@@ -159,7 +170,16 @@ class Difference(Operator):
                           EXCEPT select * FROM {}""".format(relation1.name,
                                                             relation2.name)
         else:
-            self.execute_non_atomic()
+            if not self.is_atomic(relation1) and not self.is_atomic(relation2):
+                self.rel1 = relation1.result
+                self.rel2 = relation2.result
+                self.result = self.execute_atomic()
+            elif not self.is_atomic(relation1):
+                self.rel1 = relation1.result
+                self.result = self.execute_atomic()
+            elif not self.is_atomic(relation2):
+                self.rel2 = relation2.result
+                self.result = self.execute_atomic()
 
     def execute_atomic(self):
         return self.rel1.minus(self.rel2)
@@ -168,7 +188,7 @@ class Rel:
 
     """
     Rel is a relation from some database. You can either
-    instatiate it with the help of utils.Database or
+    instantiate it with the help of utils.Database or
     you can simply create a relation where
     dtypes is a dictionnary of the columns name and
     data is a list of tuples with the length of the dictionnary
@@ -234,7 +254,7 @@ class Rel:
                 row.append(self.data[i][j])
             new_data.append(row)
 
-        return Rel(new_keys, new_data)
+        return Rel(new_keys, new_data, name=self.name)
 
     def join(self, other):
         """
@@ -298,7 +318,7 @@ class Rel:
             for i in sorted(indices_to_remove, reverse=True):
                 del row[i]
 
-        return Rel(columns, data)
+        return Rel(columns, data, name=self.name)
 
 
     def rename(self, old_name, new_name):
