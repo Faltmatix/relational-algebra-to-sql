@@ -47,25 +47,29 @@ class Select(Operator):
         self.rel = relation
         self.column_name = column_name
         self.target = target
-        if self.is_atomic(relation):
-            self.result = self.execute_atomic()
-            self.sql = """SELECT DISTINCT * FROM {}
-                          WHERE {} = {}""".format(relation.name,
-                                                  column_name,
-                                                  target)
-        else:
-            self.result = self.execute_non_atomic()
+        self.execute()
 
     def execute(self):
         """"""
+        if self.is_atomic(self.rel):
+            self.result = self.execute_atomic()
+            self.sql = """SELECT DISTINCT * FROM {}
+                          WHERE {} = {}""".format(self.rel.name,
+                                                  self.column_name,
+                                                  self.target)
+        else:
+            self.result = self.execute_non_atomic()
 
     def execute_atomic(self):
         """"""
         return self.rel.select(self.column_name, self.target)
 
+    def execute_non_atomic(self):
+        return self.rel.execute()
+
 class Project(Operator):
 
-    def __init__(self, column_names, rel):
+    def __init__(self, rel, column_names):
         """"""
         self.rel = rel
         self.col_names = column_names
@@ -77,7 +81,8 @@ class Project(Operator):
             self.sql = "SELECT DISTINCT {} FROM {}".format(", ".join(self.col_names),
                                                   self.rel.name)
         else:
-            self.result = self.execute_non_atomic()
+            self.rel = self.rel.result
+            self.result = self.execute_atomic()
 
     def execute_atomic(self):
         """
@@ -85,11 +90,14 @@ class Project(Operator):
         of the column names in the relation given as
         a parameter to the class
         """
+        print("Atomic Project")
         return self.rel.keep(self.col_names)
 
 
     def execute_non_atomic(self):
         """"""
+        print("Non atomic Project")
+        return self.rel.execute()
        
 class Join(Operator):
 
@@ -196,6 +204,9 @@ class Rel:
         """
         Some comment
         """
+
+        if type(column_names) == str:
+            column_names = [column_names]
 
         new_data = []
         new_keys = {}

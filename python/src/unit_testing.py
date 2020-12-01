@@ -33,8 +33,6 @@ class TestSelect(unittest.TestCase):
 
         rel = Rel(dtypes, data)
 
-        print(rel, select.result)
-
         self.assertTrue(select.result == rel)
 
 
@@ -44,8 +42,8 @@ class TestProject(unittest.TestCase):
     r = db.get_relation("students")
 
     # Object to evaluate
-    proj1 = Project(["id", "name"], r)
-    proj2 = Project(["name", "id"], r)
+    proj1 = Project(r, ["id", "name"])
+    proj2 = Project(r, ["name", "id"])
 
     # Expected results
     eres1 = Rel({"id":"integer", "name":"text"},
@@ -143,7 +141,19 @@ class TestDifference(unittest.TestCase):
 
         self.assertTrue(difference.result == rel)
 
-#class ComposedRequests(unittest.TestCase):
+class ComposedRequests(unittest.TestCase):
+
+    def test_project_select(self):
+
+        r = db.get_relation("students")
+        select = Select(r, "age", 20)
+        request = Project(select, "age")
+        #request = Project(Select(r, "age", 20), "name")
+        print(request.result)
+
+    def test_select_project(self):
+
+        r = db.get_relation("students")
 
 if __name__ == "__main__":
 
