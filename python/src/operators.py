@@ -58,7 +58,8 @@ class Select(Operator):
                                                   self.column_name,
                                                   self.target)
         else:
-            self.result = self.execute_non_atomic()
+            self.rel = self.rel.result
+            self.result = self.execute_atomic()
 
     def execute_atomic(self):
         """"""
@@ -90,7 +91,6 @@ class Project(Operator):
         of the column names in the relation given as
         a parameter to the class
         """
-        print("Atomic Project")
         return self.rel.keep(self.col_names)
 
 
@@ -197,8 +197,17 @@ class Rel:
 
     def __init__(self, dtypes, data, name=None):
         self.dtypes = dtypes
-        self.data = data
+        self.data = self.format_data(data)
         self.name = name
+
+
+    def format_data(self, data):
+        if type(data) == str:
+            return [[data]]
+        elif type(data[0]) == str:
+            return [data]
+        else:
+            return data
 
     def keep(self, column_names):
         """

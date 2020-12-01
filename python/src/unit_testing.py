@@ -146,14 +146,27 @@ class ComposedRequests(unittest.TestCase):
     def test_project_select(self):
 
         r = db.get_relation("students")
-        select = Select(r, "age", 20)
-        request = Project(select, "age")
-        #request = Project(Select(r, "age", 20), "name")
-        print(request.result)
+        request = Project(Select(r, "age", 20), "name")
+
+        # Expected result
+        dtypes = {"name":"text"}
+        data = [['Adrien'], ['Loic']]
+        rel = Rel(dtypes, data)
+
+        self.assertTrue(request.result == rel)
 
     def test_select_project(self):
 
         r = db.get_relation("students")
+        request = Select(Project(r, "name"), "name", "Loic")
+
+        # Expected result
+        dtypes = {'name': 'text'}
+        data = 'Loic'
+        rel = Rel(dtypes, data)
+
+        self.assertTrue(request.result == rel)
+
 
 if __name__ == "__main__":
 
