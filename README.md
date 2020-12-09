@@ -253,7 +253,6 @@ on how to use them.
 In this section, I give some examples on how to combine the expressions
 together
 
-Select the name of the city with 20.3 in population
 ```python
     request = Project(Select(cities, "Population", 20.3), "Name")
     print(request.result)
