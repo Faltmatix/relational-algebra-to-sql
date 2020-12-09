@@ -38,13 +38,12 @@ in `operators.py`
 
 You can find a database for testing purpose at
 `./python/resources/testing.db`. If you modify these tables,
-the unit tests might fail so it is recommanded to create your
+the unit tests might fail so it is recommended to create your
 own database for other purposes than testing.
 
 Supposing you are in the ./python/src folder, the basic
 workflow for using the files with a database is this :
-
-    import os
+```python
     from operators import *
     from utils import Database
     
@@ -53,30 +52,30 @@ workflow for using the files with a database is this :
     # ./python/resources/testing.db
     
     db = Database("../resources/testing.db")
-
+```
 Now that you have specified the location of your database,
 you can get any table as an operator relation by giving the
 name of the table as a string :
-
+```python
     cities = db.get_relation("cities")
     
     # For showing the table rows :
     print(cities.data)
     # For showing the columns data types :
     print(cities.dtypes)
-
+```
     [('Bergen', 'Belgium', 20.3), ('Bergen', 'Norway', 30.5), ('Brussels', 'Belgium', 370.6)]
     {'Name': 'text', 'Country': 'text', 'Population': 'real'}
 
 You can of course use any operators on those relations.
 The next section goes into details about them but here is
 an example of Select :
-
+```python
     request = Select(cities, "Name", "Bergen")
     
     # The relation is stored in the result attribute of every operator
     print(request.result)
-
+```
     cities
     {'Name': 'text', 'Country': 'text', 'Population': 'real'}
     ('Bergen', 'Belgium', 20.3)
@@ -99,7 +98,7 @@ on how to use them.
 <a id="orgf114dae"></a>
 
 ## Select
-
+```python
     # Using a string to select
     request1 = Select(cities, "Country", "Belgium")
     # Using another data type
@@ -118,7 +117,7 @@ on how to use them.
     
     request3 = Select(select_r, "A", "C")
     print(request3.result)
-
+```
     cities
     {'Name': 'text', 'Country': 'text', 'Population': 'real'}
     ('Bergen', 'Belgium', 20.3)
@@ -144,10 +143,10 @@ on how to use them.
 <a id="org8c0d1f1"></a>
 
 ## Project
-
+```python
     request = Project(cities, "Name")
     print(request.result)
-
+```
     cities
     {'Name': 'text'}
     ['Bergen']
@@ -158,7 +157,7 @@ on how to use them.
 <a id="org32bbeca"></a>
 
 ## Join
-
+```python
     r = db.get_relation("join_r")
     s = db.get_relation("join_s")
     
@@ -168,7 +167,7 @@ on how to use them.
     request = Join(r, s)
     
     print(request.result)
-
+```
     join_r
     {'A': 'integer', 'B': 'integer', 'C': 'integer'}
     (1, 3, 5)
@@ -195,10 +194,10 @@ on how to use them.
 <a id="org5542727"></a>
 
 ## Rename
-
+```python
     request = Rename(cities, "Name", "cities")
     print(request.result)
-
+```
     cities
     {'cities': 'text', 'Country': 'text', 'Population': 'real'}
     ('Bergen', 'Belgium', 20.3)
@@ -209,7 +208,7 @@ on how to use them.
 <a id="org999759c"></a>
 
 ## Union
-
+```python
     union_r = db.get_relation("union_r")
     union_s = db.get_relation("union_s")
     request = Union(union_r, union_s)
@@ -217,7 +216,7 @@ on how to use them.
     print(union_r)
     print(union_s)
     print(request.result)
-
+```
     union_r
     {'A': 'integer', 'B': 'integer', 'C': 'integer'}
     (1, 3, 5)
@@ -238,10 +237,10 @@ on how to use them.
 <a id="org821185d"></a>
 
 ## Difference
-
+```python
     request = Difference(union_r, union_s)
     print(request.result)
-
+```
     union_r
     {'A': 'integer', 'B': 'integer', 'C': 'integer'}
     (1, 3, 5)
@@ -254,28 +253,27 @@ on how to use them.
 In this section, I give some examples on how to combine the expressions
 together
 
-Select the name of the city with 20.3 in population
-
+```python
     request = Project(Select(cities, "Population", 20.3), "Name")
     print(request.result)
-
+```
     cities
     {'Name': 'text'}
     ['Bergen']
-
+```python
     request = Union(Select(cities, "Name", "Brussels"), Select(cities, "Population", 20.3))
     print(request.result)
-
+```
     cities
     {'Name': 'text', 'Country': 'text', 'Population': 'real'}
     ('Brussels', 'Belgium', 370.6)
     ('Bergen', 'Belgium', 20.3)
-
+```python
     countries = db.get_relation("countries")
     capitals = Rename(Project(countries, ["Capital", "Name", "Population"]), "Name", "Country")
     all_cities = Union(Rename(capitals, "Capital", "Name"), cities)
     print(all_cities.result)
-
+```
     countries
     {'Name': 'text', 'Country': 'text', 'Population': 'real'}
     ['Brussels', 'Belgium', 10255.6]
