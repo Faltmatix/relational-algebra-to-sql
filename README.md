@@ -38,7 +38,7 @@ in `operators.py`
 
 You can find a database for testing purpose at
 `./python/resources/testing.db`. If you modify these tables,
-the unit tests might fail so it is recommanded to create your
+the unit tests might fail so it is recommended to create your
 own database for other purposes than testing.
 
 Supposing you are in the ./python/src folder, the basic
