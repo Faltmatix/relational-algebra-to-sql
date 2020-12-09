@@ -44,7 +44,6 @@ own database for other purposes than testing.
 Supposing you are in the ./python/src folder, the basic
 workflow for using the files with a database is this :
 ```python
-    import os
     from operators import *
     from utils import Database
     
