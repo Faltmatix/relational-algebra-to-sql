@@ -1,0 +1,175 @@
+\documentclass{article}
+
+\usepackage{hyperref}
+\usepackage{graphicx}                                          
+
+\title{
+{\Huge Rapport}\\
+Base de données I\\
+}
+
+\author{
+\textbf{Vandekerckhove Adrien}\\
+}
+
+\date{Année Académique {2020-2021}\\
+{BAB2 Sciences Informatiques}\\
+\vspace{1cm}
+Faculté des Sciences, Université de Mons}
+
+\begin{document}
+\maketitle
+\newpage
+\tableofcontents
+\newpage
+
+\section{Introduction}
+
+Dans ce rapport, je discute de mes réflexions lors de
+l'implémentation des fonctionnalités demandées pour ce projet.
+Pour une description détaillée des classes et fonctions,
+la documentation est fournie dans les fichiers python. Un
+guide d'utilisation est aussi fourni sous la forme d'un
+fichier markdown nommé README.md
+
+\section{Design et implémentation}
+
+Tout d'abord, il convient de réfléchir au fonctionnement
+de l'algèbre SPJRUD pour mieux le modéliser sous python.
+Chaque opérateur algébrique s'éxécute avec une ou deux
+relations et retournent toujours une unique relation.
+Autrement dit, nous devons prendre en paramètre une
+ou deux relations pour chaque opérateur et ce dernier
+doit retourner une nouvelle relation. \\
+
+La première étape est donc de définir une relation en python.
+Pour ce faire, j'ai utilisé une classe nommée Rel. Celle-ci
+possède :
+
+\begin{itemize}
+    \item Un nom
+
+    \item Un dictionnaire python avec en clé le nom d'une
+    colonne et en valeur le type de cette colonne.
+
+    \item Les tuples de données que cette relation possède
+\end{itemize}
+
+Pour pouvoir implémenter toutes les fonctionnalités. J'ai choisi
+d'utiliser une classe par opérateur. L'idée est que pour chaque
+instance d'opérateur, on a la relation associée à l'opération et
+la requête SQL qui sont en mémoires sous forme d'attributs.
+Cette méthode permet de construire récursivement la nouvelle
+relation et la requête SQL composée.
+
+Pour pouvoir modifier les informations d'une relation, j'ai
+écris les méthodes appropriées dans la classe Rel qui
+retournent chacune une nouvelle relation. C'est
+aussi dans ces méthodes que l'on vérifie les erreurs d'arguments
+avant de procéder à l'exécution de l'opérateur.
+Nous pouvons distinguer deux cas d'exécution lorsqu'un opérateur
+est appelé :
+
+\begin{itemize}
+    \item \textbf{Cas de base} \\
+    L'opérateur interagit directement avec une relation. Dans ce
+    cas là, la méthode appropriée est appelée par la classe Rel
+
+  \item \textbf{Cas de récursion} \\
+    L'opérateur de base interagit avec un autre opérateur. Dans ce cas,
+    l'opérateur de base va appeler la méthode d'éxécution de l'opérateur
+    en paramètre. Ce dernier se retrouve alors à nouveau dans l'un
+    des deux cas et s'exécute de manière appropriée.
+\end{itemize}
+
+\vspace{2cm}
+
+Pour illustrer ce fonctionnement, voici un exemple avec
+Select :
+
+\begin{figure}[hbtp]
+  \makebox[\textwidth]{\includegraphics[scale=0.35]{select_example.png}}
+  \caption{Exemple pour l'exécution de Select}
+\end{figure}
+
+Le \textbf{cas de base} est déterminé à l'aide de \emph{is\_atomic()} qui
+retourne \emph{True} si la relation n'est pas un opérateur.
+\emph{is\_atomic()} est déclaré dans la superclasse \emph{Operator}
+qui contient les fonctionnalités communes utiles aux opérateurs.
+
+\subsection{Avantages du dictionnaire python}
+
+Pour garder en mémoire le type de données de chaque colonnes,
+il est nécessaire d'utiliser une structure de données appropriée.
+J'ai choisi pour cela d'utiliser les dictionnaires en python.
+Ceux-ci permettent de vérifier la présence d'une clé
+avec une complexité algorithmique en O(1) (\href{https://stackoverflow.com/questions/17539367/python-dictionary-keys-in-complexity}{Explication du hash pour une clé en python})
+
+\begin{figure}[hbtp]
+\makebox[\textwidth]{\includegraphics[scale=0.5]{check_in_dic.png}}
+\caption{Vérification de la présence d'une clé dans un dictionnaire}
+\end{figure}
+
+Si la clé est présente dans le dictionnaire, nous pouvons aussi
+récupérer sa valeur en O(1) :
+
+\begin{figure}[hbtp]
+\makebox[\textwidth]{\includegraphics[scale=0.8]{get_value.png}}
+\caption{Récupération de la valeur d'une clé.}
+\end{figure}
+
+\subsection{La classe utils}
+
+Pour communiquer avec une base de données SQLite, il est nécessaire
+d'utiliser du boilerplate code, c'est à dire du code répétitif.
+Pour simplifier l'utilisation du programme. Il
+est possible de se connecter à une base de données sqlite3 à
+l'aide de la classe Utils.Database. Une fois connecté à la base
+de données, récupérer une relation est trivial. Voici un exemple
+de comment se connecter à la base de données \emph{testing.db} à partir
+du répertoire \emph{./python/src} :
+
+\begin{figure}[hbtp]
+\makebox[\textwidth]{\includegraphics[scale=0.5]{get_relation.png}}
+\caption{Exemple d'utilisation de la classe Utils}
+\end{figure}
+
+\section{Tests}
+
+Des tests unitaires pour chaque opérateurs ont été écrits dans
+le fichier unit\_testing.py. Ce fichier teste d'abord la bonne
+éxécution des opérateurs de manière individuelle puis vérifie
+le bon fonctionnement des compositions d'opérateurs.
+Le nombre total de combinaisons entre opérateurs étant très
+grand, il est possible que des bugs ne soient pas encore découvert.
+
+\section{Bugs}
+
+Il existe un bug avec la classe Rename. Etant donné la nature
+des dictionnaires en python, si l'on utilise Rename et que l'on
+nomme le nom d'une colonne par le nom d'une colonne existante
+dans la relation. Alors la nouvelle clé va écraser l'ancienne
+et le dictionnaire pour les data types va diminuer en taille.
+En pratique, il n'y a pas de raisons de renommer le nom
+d'une colonne par celui d'une déjà présente dans la relation
+donc la probabilité de tomber sur ce bug est relativement
+faible.
+
+\begin{figure}[hbtp]
+\makebox[\textwidth]{\includegraphics[scale=0.5]{rename_bug.png}}
+\caption{Démonstration du bug dans la console python}
+\end{figure}
+
+\section{Critique du code}
+
+Dans l'ensemble, je suis assez satisfait du code. La logique
+pour les opérateurs est suffisament consistante et claire à lire.
+Les manipulations de données sont effectuées en priorisant
+l'optimisation ce qui permet de travailler avec des bases
+de données suffisament grandes. Si il y a un point à améliorer,
+ce serait la gestion des erreurs. Celle-ci est assez générale
+mais pourrait être plus précises et renvoyer des messages
+d'erreurs spécifiques au contexte d'exécution.
+
+
+\end{document}
