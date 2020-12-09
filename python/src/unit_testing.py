@@ -35,7 +35,6 @@ class TestSelect(unittest.TestCase):
 
         self.assertTrue(select.result == rel)
 
-
 class TestProject(unittest.TestCase):
     """"""
 
@@ -217,12 +216,10 @@ class ComposedRequests(unittest.TestCase):
 
         #Expected result
         dtypes = {'id': 'integer', 'name': 'text', 'age': 'int', 'studies': 'text'}
-        # TODO Examine why rel doesn't encapsulate data in a list by itself
         data = [(2, 'Loic', 20, 'Engineering')]
         rel = Rel(dtypes, data)
 
         self.assertTrue(request.result == rel)
-
 
 
 if __name__ == "__main__":

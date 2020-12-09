@@ -1,189 +1,5 @@
 import utils
 
-class Operator:
-    """This class is the template of the operators.
-       Functions that should be available to all
-       the operators are put here. The class itself
-       should not be called"""
-
-    # The columns names should be strings inside a tuple or list
-    authorized_types = [str, list, tuple]
-
-    def __init__(self):
-        """"""
-
-    def execute_non_atomic(self):
-        """"""
-
-    def check_cols(self, cols):
-
-        cols_type = type(cols)
-
-        if cols_type not in Operator.authorized_types:
-            raise TypeError("""You entered the wrong type of argument for the
-                               columns_name of {} \nIt should be either
-                               a string for selecting one column and it
-                               should be a tuple or a list of strings for
-                               selecting multiple columns but the argument
-                               received
-                               is : {}""".format(self.__str__, cols_type))
-
-        if cols_type == list or cols_type == tuple:
-            for column_name in cols:
-                if type(column_name) != str:
-                    raise TypeError("""The members from your collection
-                                       should be strings, but {} is
-                                       {}""".format(column_name,
-                                                    type(column_name)))
-    def is_atomic(self, rel):
-        return isinstance(rel, Rel)
-
-class Select(Operator):
-
-    def __init__(self, relation, column_name, target):
-        """Cols should be put in a tuple (*cols,)
-           to prevent SQL injection from the string operations"""
-
-        self.rel = relation
-        self.column_name = column_name
-        self.target = target
-        self.execute()
-
-    def execute(self):
-        """"""
-        if self.is_atomic(self.rel):
-            self.result = self.execute_atomic()
-            self.sql = """SELECT DISTINCT * FROM {}
-                          WHERE {} = {}""".format(self.rel.name,
-                                                  self.column_name,
-                                                  self.target)
-        else:
-            self.rel = self.rel.result
-            self.result = self.execute_atomic()
-
-    def execute_atomic(self):
-        """"""
-        return self.rel.select(self.column_name, self.target)
-
-    def execute_non_atomic(self):
-        return self.rel.execute()
-
-class Project(Operator):
-
-    def __init__(self, rel, column_names):
-        """"""
-        self.rel = rel
-        self.col_names = column_names
-        self.execute()
-
-    def execute(self):
-        if self.is_atomic(self.rel):
-            self.result = self.execute_atomic()
-            self.sql = "SELECT DISTINCT {} FROM {}".format(", ".join(self.col_names),
-                                                  self.rel.name)
-        else:
-            self.rel = self.rel.result
-            self.result = self.execute_atomic()
-
-    def execute_atomic(self):
-        """
-        Returns a new relation which is the projection
-        of the column names in the relation given as
-        a parameter to the class
-        """
-        return self.rel.keep(self.col_names)
-
-
-    def execute_non_atomic(self):
-        """"""
-        return self.rel.execute()
-       
-class Join(Operator):
-
-    def __init__(self, relation1, relation2):
-        """"""
-        self.rel1 = relation1
-        self.rel2 = relation2
-        if self.is_atomic(relation1) and self.is_atomic(relation2):
-            self.result = self.execute_atomic()
-            self.sql = "SELECT * FROM {} NATURAL JOIN {}".format(relation1.name,
-                                                                 relation2.name)
-        else:
-            self.result = self.execute_non_atomic()
-
-    def execute_atomic(self):
-        return self.rel1.join(self.rel2)
-
-
-class Rename(Operator):
-
-    def __init__(self, relation, old_name, new_name):
-        """"""
-        self.rel = relation
-
-        if self.is_atomic(relation):
-            self.result = relation.rename(old_name, new_name)
-            self.sql = """ALTER TABLE {}
-                          RENAME COLUMN {} to {}
-                       """.format(relation.name, old_name, new_name)
-        else:
-            self.rel = self.rel.result
-            self.result = self.rel.rename(old_name, new_name)
-
-class Union(Operator):
-
-    def __init__(self, relation1, relation2):
-        """"""
-        self.rel1 = relation1
-        self.rel2 = relation2
-
-        if self.is_atomic(relation1) and self.is_atomic(relation2):
-            self.result = self.execute_atomic()
-            self.sql = """SELECT * FROM {}
-                          UNION SELECT * FROM {}""".format(relation1.name,
-                                                           relation2.name)
-        else:
-            if not self.is_atomic(relation1) and not self.is_atomic(relation2):
-                self.rel1 = relation1.result
-                self.rel2 = relation2.result
-                self.result = self.execute_atomic()
-            elif not self.is_atomic(relation1):
-                self.rel1 = relation1.result
-                self.result = self.execute_atomic()
-            elif not self.is_atomic(relation2):
-                self.rel2 = relation2.result
-                self.result = self.execute_atomic()
-
-    def execute_atomic(self):
-        return self.rel1.union(self.rel2)
-
-
-class Difference(Operator):
-
-    def __init__(self, relation1, relation2):
-        """"""
-        self.rel1 = relation1
-        self.rel2 = relation2
-        if self.is_atomic(relation1) and self.is_atomic(relation2):
-            self.result = self.execute_atomic()
-            self.sql = """SELECT * FROM {}
-                          EXCEPT select * FROM {}""".format(relation1.name,
-                                                            relation2.name)
-        else:
-            if not self.is_atomic(relation1) and not self.is_atomic(relation2):
-                self.rel1 = relation1.result
-                self.rel2 = relation2.result
-                self.result = self.execute_atomic()
-            elif not self.is_atomic(relation1):
-                self.rel1 = relation1.result
-                self.result = self.execute_atomic()
-            elif not self.is_atomic(relation2):
-                self.rel2 = relation2.result
-                self.result = self.execute_atomic()
-
-    def execute_atomic(self):
-        return self.rel1.minus(self.rel2)
-
 class Rel:
 
     """
@@ -199,13 +15,11 @@ class Rel:
                )
 
     It is recommanded to rely more on the Database
-    class when calling Rel because it takes care
+    class when working with Rel because it takes care
     of the boilerplate code
 
     >>> db = utils.Database("path_to_database")
-    >>> dtypes  = db.get_datatypes("rel_name")
-    >>> data = db.get_columns("rel_name")
-    >>> r = Rel(dtypes, data)
+    >>> r = db.get_relation("relation_name")
 
     Implementation details :
 
@@ -231,7 +45,8 @@ class Rel:
 
     def keep(self, column_names):
         """
-        Some comment
+        Keeps the columns names in passed as a parameter and drops
+        the other ones.
         """
 
         if type(column_names) == str:
@@ -258,7 +73,7 @@ class Rel:
 
     def join(self, other):
         """
-        Get common names A = A
+        Algorithm to join two different relations
         """
         this_keys = self.dtypes.keys()
         this_values = self.dtypes.values()
@@ -422,3 +237,180 @@ class Rel:
 
     def __eq__(self, r):
         return self.dtypes == r.dtypes and self.data == r.data
+
+class Operator:
+    """This class is the template of the operators.
+       Functions that should be available to all
+       the operators are put here. The class itself
+       should not be called"""
+
+    # The columns names should be strings inside a tuple or list
+    authorized_types = [str, list, tuple]
+
+    def check_cols(self, cols):
+
+        cols_type = type(cols)
+
+        if cols_type not in Operator.authorized_types:
+            raise TypeError("""You entered the wrong type of argument for the
+                               columns_name of {} \nIt should be either
+                               a string for selecting one column and it
+                               should be a tuple or a list of strings for
+                               selecting multiple columns but the argument
+                               received
+                               is : {}""".format(self.__str__, cols_type))
+
+        if cols_type == list or cols_type == tuple:
+            for column_name in cols:
+                if type(column_name) != str:
+                    raise TypeError("""The members from your collection
+                                       should be strings, but {} is
+                                       {}""".format(column_name,
+                                                    type(column_name)))
+    def is_atomic(self, rel):
+        return isinstance(rel, Rel)
+
+class Select(Operator):
+    """
+    Usage :
+    >>> students = db.get_relation("students")
+    >>> get_adrien = Select(students, "name", "Adrien")
+    """
+    def __init__(self, relation, column_name, target):
+
+        self.rel = relation
+        self.column_name = column_name
+        self.target = target
+        self.execute()
+
+    def execute(self):
+
+        if self.is_atomic(self.rel):
+            self.sql = f"""SELECT DISTINCT * FROM {self.rel.name} WHERE {self.column_name} = '{self.target}'"""
+            self.result = self.rel.select(self.column_name, self.target)
+        else:
+            self.sql = f"""SELECT DISTINCT * FROM ({self.rel.sql}) WHERE {self.column_name} = '{self.target}'"""
+            self.result = self.rel.result.select(self.column_name, self.target)
+
+
+class Project(Operator):
+    """
+    Usage :
+    >>> students = db.get_relation("students")
+    >>> names = Project(students,"Name")
+    """
+
+    def __init__(self, rel, column_names):
+        """"""
+        self.rel = rel
+        self.col_names = column_names
+
+        if type(self.col_names) == str:
+            self.col_names = [self.col_names]
+
+        if self.is_atomic(self.rel):
+            self.sql = "SELECT DISTINCT {} FROM {}".format(", ".join(self.col_names),
+                                                    self.rel.name)
+            self.result = self.rel.keep(self.col_names)
+        else:
+            self.sql = "SELECT DISTINCT {} FROM ({})".format(", ".join(self.col_names),
+                                                             self.rel.sql)
+            self.result = self.rel.result.keep(self.col_names)
+
+      
+class Join(Operator):
+    """
+    Usage :
+    >>> r = db.get_relation("join_r")
+    >>> s = db.get_relation("join_s")
+    >>> join = Join(r, s)
+    """
+
+    def __init__(self, relation1, relation2):
+        """"""
+        self.rel1 = relation1
+        self.rel2 = relation2
+        if self.is_atomic(relation1) and self.is_atomic(relation2):
+            self.sql = "SELECT * FROM {} NATURAL JOIN {}".format(relation1.name,
+                                                                 relation2.name)
+            self.result = self.rel1.join(self.rel2)
+        else:
+            if not self.is_atomic(relation1) and not self.is_atomic(relation2):
+                self.sql = f"SELECT * FROM ({self.rel1.sql}) NATURAL JOIN ({self.rel2.sql})"
+                self.result = self.rel1.result.join(self.rel2.result)
+
+class Rename(Operator):
+    """
+    Usage :
+    >>> students = db.get_relation("students")
+    >>> new_students = Rename(students, "Name", "New Students")
+    """
+
+    def __init__(self, relation, old_name, new_name):
+        """"""
+        self.rel = relation
+
+        if self.is_atomic(relation):
+            self.sql = """ALTER TABLE {} RENAME COLUMN {} to {}""".format(relation.name, old_name, new_name)
+            self.result = relation.rename(old_name, new_name)
+        else:
+            self.sql = f"ALTER TABLE ({self.rel.sql}) RENAME COLUMN {old_name} TO {new_name}"
+            self.rel = self.rel.result
+            self.result = self.rel.rename(old_name, new_name)
+
+class Union(Operator):
+    """
+    Usage :
+    >>> r = db.get_relation("union_r")
+    >>> s = db.get_relation("union_s")
+    >>> union = Union(r, s)
+    """
+
+    def __init__(self, relation1, relation2):
+        """"""
+        self.rel1 = relation1
+        self.rel2 = relation2
+
+        if self.is_atomic(relation1) and self.is_atomic(relation2):
+            self.sql = """SELECT * FROM {} UNION SELECT * FROM {}""".format(relation1.name,
+                                                           relation2.name)
+            self.result = self.rel1.union(self.rel2)
+        else:
+            if not self.is_atomic(relation1) and not self.is_atomic(relation2):
+                self.sql = f"SELECT * FROM ({self.rel1.sql}) UNION SELECT * FROM ({self.rel2.sql})"
+                self.result = self.rel1.result.union(self.rel2.result)
+            elif not self.is_atomic(relation1):
+                self.sql = f"SELECT * FROM ({self.rel1.sql}) UNION SELECT * FROM {self.rel2.name}"
+                self.result = self.rel1.result.union(self.rel2)
+            elif not self.is_atomic(relation2):
+                self.sql = f"SELECT * FROM {self.rel1.name} UNION SELECT * FROM ({self.rel2.sql})"
+                self.result = self.rel1.union(self.rel2.result)
+
+
+class Difference(Operator):
+    """
+    Usage :
+    >>> r = db.get_relation("union_r")
+    >>> s = db.get_relation("union_s")
+    >>> difference = Difference(r, s)
+    """
+
+    def __init__(self, relation1, relation2):
+        """"""
+        self.rel1 = relation1
+        self.rel2 = relation2
+        if self.is_atomic(relation1) and self.is_atomic(relation2):
+            self.result = self.rel1.minus(self.rel2)
+            self.sql = """SELECT * FROM {}
+                          EXCEPT select * FROM {}""".format(relation1.name,
+                                                            relation2.name)
+        else:
+            if not self.is_atomic(relation1) and not self.is_atomic(relation2):
+                self.sql = f"SELECT * FROM ({self.rel1.sql}) EXCEPT SELECT * FROM ({self.rel2.sql})"
+                self.result = self.rel1.result.minus(self.rel2.result)
+            elif not self.is_atomic(relation1):
+                self.sql = f"SELECT * FROM ({self.rel1.sql}) EXCEPT SELECT * FROM {self.rel2.name}"
+                self.result = self.rel1.result.minus(self.rel2)
+            elif not self.is_atomic(relation2):
+                self.sql = f"SELECT * FROM {self.rel1.name} EXCEPT SELECT * FROM ({self.rel2.sql})"
+                self.result = self.rel1.minus(self.rel2.result)
