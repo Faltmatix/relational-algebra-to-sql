@@ -141,6 +141,8 @@ class Rel:
         Returns a new relation with the old_name replaced
         by the new_name in the dtypes attribute
         """
+        if new_name in self.dtypes:
+            raise Exception(f"You can't name '{old_name}'->'{new_name}' because '{new_name}' is already a column name of '{self.name}'")
 
         if old_name not in self.dtypes:
             raise Exception("{} is not in {}".format(old_name, self.name))
@@ -338,6 +340,12 @@ class Join(Operator):
             if not self.is_atomic(relation1) and not self.is_atomic(relation2):
                 self.sql = f"SELECT * FROM ({self.rel1.sql}) NATURAL JOIN ({self.rel2.sql})"
                 self.result = self.rel1.result.join(self.rel2.result)
+            elif not self.is_atomic(relation1):
+                self.sql = f"SELECT * FROM ({self.rel1.sql}) NATURAL JOIN {relation2.name}"
+                self.result = self.rel1.result.join(self.rel2)
+            elif not self.is_atomic(relation2):
+                self.sql = f"SELECT * FROM {relation1.name} NATURAL JOIN ({self.rel2.sql})"
+                self.result = self.rel1.join(self.rel2.result)
 
 class Rename(Operator):
     """

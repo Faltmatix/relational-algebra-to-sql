@@ -1,0 +1,36 @@
+>>> from operators import *
+>>> from utils import Database
+>>> db = Database("../resources/testing.db")
+
+>>> l = [
+[2001 ,   "M. Schumacher",  "Ferrari"],
+[2001 ,   "R. Barrichello",    "Ferrari"],
+[2001 ,   "J. Trulli", "Jordan"],
+[2001 ,   "G. Fisichella", "Benetton"],
+[2001 ,   "M. Häkkinen", "McLaren"],
+[2003 ,   "M. Schumacher",  "Ferrari"],
+[2003 ,   "R. Barrichello",    "Ferrari"],
+[2003 ,   "J. Trulli", "Renault"],
+[2003 ,   "F. Alonso", "Renault"],
+[2003 ,   "G. Fisichella", "Jordan"],
+[2003 ,   "K. Räikkönen",    "Jordan"]
+]
+>>> aff = l
+>>> pod = [
+[2001 ,   "Belgique",  "M. Schumacher", "J. Trulli", "R. Barrichello"],
+[2003 ,   "Espagne",   "M. Schumacher", "F. Alonso", "R. Barrichello"],
+[2003 ,   "Belgique",  "G. Fisichella", "K. Räikkönen",   "F. Alonso"]
+]
+>>> daff = {"Année":"int","Pilote":"text","Ecurie":"text"}
+>>> raff = Rel(daff, aff)
+
+>>> dpod = {"Année":"int", "GP":"Text", "Vainqueur":"text", "Deuxième":"text", "Troisième":"text"}
+>>> rpod = Rel(dpod, pod)
+
+>>> query = Join(Rename(raff, "Pilote", "Vainqueur"), rpod)
+
+>>> print(query.result)
+{'Année': 'int', 'Vainqueur': 'text', 'Ecurie': 'text', 'GP': 'Text', 'Deuxième': 'text', 'Troisième': 'text'}
+[2001, 'M. Schumacher', 'Ferrari', 2001, 'Belgique', 'J. Trulli']
+[2003, 'M. Schumacher', 'Ferrari', 2003, 'Espagne', 'F. Alonso']
+[2003, 'G. Fisichella', 'Jordan', 2003, 'Belgique', 'K. Räikkönen']
