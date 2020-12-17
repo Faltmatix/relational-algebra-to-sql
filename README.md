@@ -75,6 +75,9 @@ an example of Select :
     
     # The relation is stored in the result attribute of every operator
     print(request.result)
+    # If you want the associated sql string for any operation
+    # you just need to type 
+    # print(operator.sql)
 ```
     cities
     {'Name': 'text', 'Country': 'text', 'Population': 'real'}
